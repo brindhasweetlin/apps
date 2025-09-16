@@ -17,17 +17,29 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('AuthWrapper: Building with auth state changes');
     return StreamBuilder<UserModel?>(
       stream: context.read<AuthService>().user,
       builder: (context, snapshot) {
+        debugPrint('AuthWrapper: Connection state: ${snapshot.connectionState}');
+        debugPrint('AuthWrapper: Has data: ${snapshot.hasData}');
+        debugPrint('AuthWrapper: Has error: ${snapshot.hasError}');
+        if (snapshot.hasError) {
+          debugPrint('AuthWrapper: Error: ${snapshot.error}');
+          debugPrint('AuthWrapper: Stack trace: ${snapshot.stackTrace}');
+        }
+
         if (snapshot.connectionState == ConnectionState.waiting) {
+          debugPrint('AuthWrapper: Waiting for auth state...');
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
         final user = snapshot.data;
+        debugPrint('AuthWrapper: User data: ${user?.toMap()}');
         if (user == null) {
+          debugPrint('AuthWrapper: No user, showing sign-in screen');
           return const CustomSignInScreen();
         }
 
@@ -103,7 +115,8 @@ class CustomSignInScreen extends StatelessWidget {
         final user = state.user!;
         final metadata = user.metadata;
         final isNewUser = metadata.creationTime == metadata.lastSignInTime;
-        
+        print("metadata");
+        print(metadata);
         if (isNewUser) {
           await FirestoreService().createUserProfile(
             userId: user.uid,

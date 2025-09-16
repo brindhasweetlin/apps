@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import '../models/user_model.dart';
 import '../models/team_model.dart';
 import '../models/event_model.dart';
@@ -50,28 +51,35 @@ class FirestoreService {
     String? username,
   }) async {
     try {
-      final userData = {
-        'id': userId,
-        'email': email,
-        'displayName': displayName ?? email.split('@')[0],
-        'photoUrl': photoUrl,
-        'username': username?.toLowerCase(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'credits': 100, // Starting credits for new users
-        'followingTeamIds': [],
-        'betIds': [],
-        'notificationsEnabled': true,
-      };
-
-      // Remove null values
-      userData.removeWhere((key, value) => value == null);
-
-      // Create a UserModel instance from the map
-      final user = UserModel.fromJson(userData);
+      debugPrint('FirestoreService: Creating/updating user profile for UID: $userId');
+      debugPrint('FirestoreService: Email: $email, Display Name: $displayName, Username: $username');
+      
+      // Generate a username from email if not provided
+      final usernameValue = username?.toLowerCase() ?? email.split('@')[0].toLowerCase();
+      debugPrint('FirestoreService: Using username: $usernameValue');
+      
+      final user = UserModel(
+        id: userId,
+        email: email,
+        displayName: displayName ?? email.split('@')[0],
+        photoUrl: photoUrl,
+        username: usernameValue,
+        credits: 100, // Starting credits for new users
+        followingTeamIds: [],
+        betIds: [],
+        notificationsEnabled: true,
+        emailVerified: false,
+        isAnonymous: false,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      
+      debugPrint('FirestoreService: User model created: ${user.toMap()}');
       
       // Set the document with the UserModel instance
+      debugPrint('FirestoreService: Saving user to Firestore...');
       await usersCollection.doc(userId).set(user);
+      debugPrint('FirestoreService: User saved successfully');
     } catch (e) {
       throw Exception('Failed to create user profile: $e');
     }

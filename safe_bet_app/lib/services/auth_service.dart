@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:flutter/cupertino.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
@@ -35,26 +36,55 @@ class AuthService {
 
   // Auth state changes
   Stream<UserModel?> get user {
+    debugPrint('AuthService: Subscribed to auth state changes');
     return _auth.authStateChanges().asyncMap((firebaseUser) async {
-      if (firebaseUser == null) return null;
+      debugPrint('AuthService: Auth state changed. User: ${firebaseUser?.uid}');
       
-      // Get user data from Firestore
-      final userDoc = await _firestoreService.getUser(firebaseUser.uid);
-      
-      if (userDoc.exists) {
-        return UserModel.fromFirestore(userDoc);
-      } else {
-        // Create new user in Firestore if not exists
-        final newUser = UserModel(
-          id: firebaseUser.uid,
-          email: firebaseUser.email ?? '',
-          displayName: firebaseUser.displayName,
-          photoUrl: firebaseUser.photoURL,
-        );
-        
-        await _firestoreService.createUser(newUser);
-        return newUser;
+      if (firebaseUser == null) {
+        debugPrint('AuthService: No user signed in');
+        return null;
       }
+      
+      try {
+        debugPrint('AuthService: Fetching user data from Firestore for UID: ${firebaseUser.uid}');
+        final userDoc = await _firestoreService.getUser(firebaseUser.uid);
+        
+        if (userDoc.exists) {
+          debugPrint('AuthService: Found existing user in Firestore');
+          final userData = userDoc.data() as Map<String, dynamic>;
+          return UserModel.fromJson(userData);
+        } else {
+          debugPrint('AuthService: Creating new user profile in Firestore');
+          // Create new user profile in Firestore if not exists
+          final newUser = UserModel(
+            id: firebaseUser.uid,
+            email: firebaseUser.email ?? 'no-email@example.com',
+            displayName: firebaseUser.displayName ?? 'User ${firebaseUser.uid.substring(0, 6)}',
+            photoUrl: firebaseUser.photoURL,
+            username: firebaseUser.email?.split('@')[0]?.toLowerCase() ?? 'user_${firebaseUser.uid.substring(0, 6)}',
+            credits: 100,
+            followingTeamIds: [],
+            betIds: [],
+            notificationsEnabled: true,
+            emailVerified: firebaseUser.emailVerified,
+            isAnonymous: firebaseUser.isAnonymous,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+          
+          // Save the new user to Firestore
+          await _firestoreService.users.doc(firebaseUser.uid).set(newUser.toJson());
+          debugPrint('AuthService: Successfully created new user');
+          return newUser;
+        }
+      } catch (e, stackTrace) {
+        debugPrint('AuthService: Error in user stream: $e');
+        debugPrint('Stack trace: $stackTrace');
+        rethrow;
+      }
+    }).handleError((error) {
+      debugPrint('AuthService: Error in user stream: $error');
+      throw error;
     });
   }
 
@@ -105,17 +135,18 @@ class AuthService {
       await credential.user!.updateDisplayName(displayName);
       await credential.user!.reload();
       
-      // Create user in Firestore
-      final newUser = UserModel(
-        id: credential.user!.uid,
+      // Create user profile in Firestore
+      await _firestoreService.createUserProfile(
+        userId: credential.user!.uid,
         email: email,
         displayName: displayName,
         photoUrl: credential.user!.photoURL,
+        username: email.split('@')[0],
       );
       
-      await _firestoreService.createUser(newUser);
-      
-      return newUser;
+      // Get the newly created user
+      final userDoc = await _firestoreService.getUser(credential.user!.uid);
+      return UserModel.fromFirestore(userDoc);
     } catch (e) {
       rethrow;
     }
@@ -150,18 +181,20 @@ class AuthService {
       
       // Check if user exists in Firestore
       final userDoc = await _firestoreService.getUser(userCredential.user!.uid);
-      
+      print(userDoc);
       if (!userDoc.exists) {
-        // Create new user in Firestore if not exists
-        final newUser = UserModel(
-          id: userCredential.user!.uid,
+        // Create new user profile in Firestore if not exists
+        await _firestoreService.createUserProfile(
+          userId: userCredential.user!.uid,
           email: userCredential.user!.email ?? '',
           displayName: userCredential.user!.displayName,
           photoUrl: userCredential.user!.photoURL,
+          username: userCredential.user!.email?.split('@')[0],
         );
         
-        await _firestoreService.createUser(newUser);
-        return newUser;
+        // Get the newly created user
+        final newUserDoc = await _firestoreService.getUser(userCredential.user!.uid);
+        return UserModel.fromFirestore(newUserDoc);
       } else {
         return UserModel.fromFirestore(userDoc);
       }
