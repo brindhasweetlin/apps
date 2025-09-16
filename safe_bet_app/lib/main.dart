@@ -1,44 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import 'package:firebase_ui_oauth/firebase_ui_oauth.dart';
+import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
 import 'firebase_options.dart';
-import 'main_navigation.dart';
-import 'auth_gate.dart';
+import 'screens/main_navigation.dart';
+import 'services/auth_service.dart';
+import 'services/firestore_service.dart';
+import 'theme/app_theme.dart';
+import 'auth/auth_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Configure FirebaseUI
+  FirebaseUIAuth.configureProviders([
+    EmailAuthProvider(),
+    GoogleProvider(
+      clientId: 'YOUR_GOOGLE_CLIENT_ID',
+      style: GoogleProvider.Style(
+        iconSize: 24,
+        buttonType: ButtonStyle.filled,
+      ),
+    ),
+  ]);
+  
+  // Configure Google Fonts
+  GoogleFonts.config.allowRuntimeFetching = true;
+  
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    return MultiProvider(
+      providers: [
+        Provider<AuthService>(
+          create: (_) => AuthService(),
+        ),
+        Provider<FirestoreService>(
+          create: (_) => FirestoreService(),
+        ),
+        StreamProvider<User?>(
+          initialData: FirebaseAuth.instance.currentUser,
+          create: (context) => context.read<AuthService>().user,
+          catchError: (_, __) => null,
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Sales Bets',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
+        home: const AuthWrapper(),
       ),
-      home: const AuthGate(child: MainNavigation()),
     );
   }
 }
