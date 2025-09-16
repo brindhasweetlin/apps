@@ -109,6 +109,21 @@ class FirestoreService {
         .map((snapshot) => snapshot.data()!);
   }
 
+  /// Updates user notification settings
+  Future<void> updateNotificationSettings({
+    required String userId,
+    required Map<String, dynamic> settings,
+  }) async {
+    try {
+      await usersCollection.doc(userId).update({
+        'notificationSettings': settings,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update notification settings: $e');
+    }
+  }
+
   /// Checks if a username is available
   Future<bool> isUsernameAvailable(String username) async {
     if (username.isEmpty) return false;
