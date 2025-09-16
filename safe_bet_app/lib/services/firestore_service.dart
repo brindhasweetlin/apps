@@ -60,7 +60,7 @@ class FirestoreService {
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
         'credits': 100, // Starting credits for new users
-        'followingTeams': [],
+        'followingTeamIds': [],
         'betIds': [],
         'notificationsEnabled': true,
         ...?additionalData,
@@ -69,10 +69,11 @@ class FirestoreService {
       // Remove null values
       userData.removeWhere((key, value) => value == null);
 
-      await usersCollection.doc(userId).set(
-            userData,
-            SetOptions(merge: true),
-          );
+      // Create a UserModel instance from the map
+      final user = UserModel.fromJson(userData);
+      
+      // Set the document with the UserModel instance
+      await usersCollection.doc(userId).set(user);
     } catch (e) {
       throw Exception('Failed to create user profile: $e');
     }
@@ -166,13 +167,18 @@ class FirestoreService {
   /// Creates a new user - kept for backward compatibility
   @Deprecated('Use createUserProfile instead')
   Future<void> createUser(UserModel user) async {
+    // Create a copy of the user's data without the fields we're passing explicitly
+    final userMap = user.toMap()..removeWhere((key, _) => 
+      ['id', 'email', 'displayName', 'photoUrl', 'username'].contains(key)
+    );
+    
     return createUserProfile(
       userId: user.id,
       email: user.email,
       displayName: user.displayName,
       photoUrl: user.photoUrl,
       username: user.username,
-      additionalData: user.toMap(),
+      additionalData: userMap,
     );
   }
 
@@ -231,13 +237,13 @@ class FirestoreService {
     
     // Add bet to bets collection
     final betRef = betsCollection.doc();
-    final betWithId = bet.copyWith(id: betRef.id);
+    final betWithId = bet.copyWith();
     
     // Update user's credits
     final userRef = usersCollection.doc(bet.userId);
     
     // Add operations to batch
-    batch.set(betRef, betWithId);
+    batch.set(betRef, betWithId.toMap()..['id'] = betRef.id);
     batch.update(userRef, {
       'credits': FieldValue.increment(-bet.amount),
       'betIds': FieldValue.arrayUnion([betRef.id]),
