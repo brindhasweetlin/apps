@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:flutterfire_ui/auth.dart';
+// import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'onboarding_screen.dart';
 
@@ -51,11 +51,9 @@ class _AuthGateState extends State<AuthGate> {
         }
         if (!snapshot.hasData) {
           return SignInScreen(
-            providerConfigs: const [
-              EmailProviderConfiguration(),
-              GoogleProviderConfiguration(
-                clientId: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
-              ),
+            providers: [
+              EmailAuthProvider(),
+              GoogleProvider(clientId: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'),
             ],
             headerBuilder: (context, constraints, _) {
               return const Padding(
