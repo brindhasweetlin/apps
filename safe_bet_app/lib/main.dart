@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_ui_auth/firebase_ui_auth.dart' as fui;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
-import 'package:firebase_ui_oauth/firebase_ui_oauth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'models/user_model.dart';
 
 import 'firebase_options.dart';
 import 'screens/main_navigation.dart';
@@ -22,19 +23,15 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
-  // Configure FirebaseUI
-  FirebaseUIAuth.configureProviders([
-    EmailAuthProvider(),
+  // Configure FirebaseUI Auth
+  final providers = <dynamic>[
+    fui.EmailAuthProvider(),
     GoogleProvider(
       clientId: 'YOUR_GOOGLE_CLIENT_ID',
-      style: GoogleProvider.Style(
-        iconSize: 24,
-        buttonType: ButtonStyle.filled,
-      ),
     ),
-  ]);
+  ];
   
-  // Configure Google Fonts
+  fui.FirebaseUIAuth.configureProviders(providers.cast<fui.AuthProvider>());
   GoogleFonts.config.allowRuntimeFetching = true;
   
   runApp(const MyApp());
@@ -53,8 +50,8 @@ class MyApp extends StatelessWidget {
         Provider<FirestoreService>(
           create: (_) => FirestoreService(),
         ),
-        StreamProvider<User?>(
-          initialData: FirebaseAuth.instance.currentUser,
+        StreamProvider<UserModel?>(
+          initialData: null,
           create: (context) => context.read<AuthService>().user,
           catchError: (_, __) => null,
         ),

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../services/firestore_service.dart';
 import '../screens/main_navigation.dart';
+import 'auth_wrapper.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   final User user;
