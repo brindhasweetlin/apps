@@ -1,6 +1,7 @@
-mport 'firestore_service.dart';
+import 'firestore_service.dart';
 import 'models.dart';
 import 'live_streams_tab.dart';
+import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
