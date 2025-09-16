@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read their own profile and write to their own document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Teams and athletes are public (readable by anyone, only admins can write)
+    match /teams/{teamId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    match /athletes/{athleteId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Challenges are public (readable by anyone, only admins can write)
+    match /challenges/{challengeId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+      // Chat subcollection: only authenticated users can write
+      match /chat/{messageId} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+    }
+
+    // Bets: users can read/write their own bets
+    match /bets/{betId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+
+    // Notifications: only the user can read/write
+    match /users/{userId}/notifications/{notificationId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
