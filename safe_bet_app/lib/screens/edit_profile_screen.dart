@@ -43,15 +43,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final userData = await context.read<FirestoreService>().getUser(user.uid);
-        if (userData != null) {
-          setState(() {
-            _userData = userData;
-            _nameController.text = userData.displayName;
-            _usernameController.text = userData.username ?? '';
-            _bioController.text = userData.bio ?? '';
-            _emailController.text = userData.email;
-          });
+        final userDoc = await context.read<FirestoreService>().getUser(user.uid);
+        if (userDoc.exists) {
+          final userData = userDoc.data();
+          if (userData != null) {
+            setState(() {
+              _userData = userData;
+              _nameController.text = userData.displayName ?? '';
+              _usernameController.text = userData.username ?? '';
+              _bioController.text = userData.bio ?? '';
+              _emailController.text = userData.email;
+            });
+          }
         }
       }
     } catch (e) {
@@ -101,13 +104,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         await user.updateDisplayName(_nameController.text.trim());
       }
 
+      // Handle photo upload if a new image was selected
+      String? photoUrl;
+      if (_imageFile != null) {
+        // In a real app, you would upload the file to Firebase Storage here
+        // For example:
+        // final downloadUrl = await _storageService.uploadProfileImage(user.uid, _imageFile!);
+        // photoUrl = downloadUrl;
+        
+        // For now, we'll just use the local file path as a placeholder
+        // In a real app, you should upload the file and get a URL
+        photoUrl = _imageFile!.path;
+      }
+
       // Update user data in Firestore
-      await firestoreService.updateUser(
+      await firestoreService.updateUserProfile(
         user.uid,
         displayName: _nameController.text.trim(),
         username: _usernameController.text.trim(),
-        bio: _bioController.text.trim(),
-        photoFile: _imageFile,
+        photoUrl: photoUrl,
+        additionalData: {
+          'bio': _bioController.text.trim(),
+        },
       );
 
       if (mounted) {
