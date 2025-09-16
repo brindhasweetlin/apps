@@ -34,4 +34,6 @@ class AppConstants {
   static const String placeholderProfile = 'assets/images/placeholder_profile.png';
   static const String placeholderTeam = 'assets/images/placeholder_team.png';
   static const String placeholderEvent = 'assets/images/placeholder_event.png';
+
+  static get appVersion => null;
 }

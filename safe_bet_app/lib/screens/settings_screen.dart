@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'change_password_screen.dart';
 import 'notification_settings_screen.dart';
-import 'language_settings_screen.dart';
 import '../constants/app_constants.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -84,31 +82,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // TODO: Implement theme change
                 // AppTheme.setThemeMode(value ? ThemeMode.dark : ThemeMode.light);
               });
-            },
-          ),
-          _buildListTile(
-            context,
-            icon: Icons.language_outlined,
-            title: 'Language',
-            trailing: Text(
-              _language,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            onTap: () async {
-              final selectedLanguage = await Navigator.push<String>(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const LanguageSettingsScreen(),
-                ),
-              );
-              
-              if (selectedLanguage != null) {
-                setState(() {
-                  _language = selectedLanguage;
-                });
-              }
             },
           ),
           const SizedBox(height: 24),

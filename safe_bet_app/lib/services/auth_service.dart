@@ -12,7 +12,7 @@ class AuthService {
   final FirestoreService _firestoreService = FirestoreService();
 
   // Configure authentication providers
-  static List<AuthProvider<AuthListener, AuthCredential>> get authProviders {
+  static List<AuthProvider<AuthListener, firebase_auth.AuthCredential>> get authProviders {
     return [
       EmailAuthProvider(),
       GoogleProvider(
