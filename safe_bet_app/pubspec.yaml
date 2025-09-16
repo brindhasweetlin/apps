@@ -36,16 +36,15 @@ dependencies:
   cupertino_icons: ^1.0.8
   
   # Firebase
-  firebase_core: ^2.24.2
-  firebase_auth: ^4.15.3
-  cloud_firestore: ^4.13.6
-  firebase_storage: ^11.6.0
-  firebase_messaging: ^14.7.10
-  firebase_ui_auth: ^1.2.0
-  firebase_ui_oauth: ^1.2.0
-  firebase_ui_firestore: ^1.2.9
-  firebase_ui_oauth_google: ^1.1.5
-  firebase_ui_oauth_apple: ^1.1.5
+  firebase_core: ^4.1.0
+  firebase_auth: ^6.0.2
+  cloud_firestore: ^6.0.1
+  firebase_storage: ^13.0.1
+  firebase_messaging: ^16.0.1
+  firebase_ui_auth: ^3.0.0
+  firebase_ui_oauth: ^2.0.0
+  firebase_ui_firestore: ^2.0.0
+  firebase_ui_oauth_google: ^2.0.0
   
   # State Management
   provider: ^6.1.1
@@ -72,7 +71,7 @@ dependencies:
   video_player: ^2.8.1
   
   # Social
-  google_sign_in: ^6.1.6
+  google_sign_in:  ^6.2.1
   
   # Animations
   lottie: ^2.7.0

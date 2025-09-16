@@ -48,7 +48,6 @@ class FirestoreService {
     String? displayName,
     String? photoUrl,
     String? username,
-    Map<String, dynamic>? additionalData,
   }) async {
     try {
       final userData = {
@@ -63,7 +62,6 @@ class FirestoreService {
         'followingTeamIds': [],
         'betIds': [],
         'notificationsEnabled': true,
-        ...?additionalData,
       };
 
       // Remove null values
@@ -163,22 +161,21 @@ class FirestoreService {
       additionalData: additionalData.isNotEmpty ? additionalData : null,
     );
   }
-  
+
   /// Creates a new user - kept for backward compatibility
   @Deprecated('Use createUserProfile instead')
   Future<void> createUser(UserModel user) async {
     // Create a copy of the user's data without the fields we're passing explicitly
-    final userMap = user.toMap()..removeWhere((key, _) => 
+    final userMap = user.toMap()..removeWhere((key, _) =>
       ['id', 'email', 'displayName', 'photoUrl', 'username'].contains(key)
     );
-    
+
     return createUserProfile(
       userId: user.id,
       email: user.email,
       displayName: user.displayName,
       photoUrl: user.photoUrl,
       username: user.username,
-      additionalData: userMap,
     );
   }
 

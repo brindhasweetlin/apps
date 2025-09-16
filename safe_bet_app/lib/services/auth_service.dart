@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
-import 'package:firebase_ui_oauth_apple/firebase_ui_oauth_apple.dart';
 import '../models/user_model.dart';
 import 'firestore_service.dart';
 
@@ -18,7 +17,6 @@ class AuthService {
       GoogleProvider(
         clientId: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
       ),
-      // AppleProvider(), // Uncomment when you set up Apple Sign In
     ];
   }
 

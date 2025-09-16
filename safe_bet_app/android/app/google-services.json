@@ -12,7 +12,12 @@
           "package_name": "com.example.safe_bet_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "560145882418-540ugmle56pv0i7ugqdoqjaclvs6sgl8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA_1ZzZ-nVFh96Uenlpuy9dZrfZIPGOBBY"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "560145882418-540ugmle56pv0i7ugqdoqjaclvs6sgl8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "560145882418-kdp7fptspif41ntikqkmp5ojb1lf2p85.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.safeBetApp"
+              }
+            }
+          ]
         }
       }
     }
