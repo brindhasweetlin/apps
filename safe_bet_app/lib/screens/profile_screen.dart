@@ -14,24 +14,61 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<User?>();
+    // Get the current user from the StreamProvider
+    final user = context.watch<UserModel?>();
     
     if (user == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Not signed in'),
+              SizedBox(height: 16),
+              Text('Please sign in to view your profile'),
+            ],
+          ),
+        ),
+      );
     }
-
+    
+    // If we have a user, show their profile
+    return _buildProfileContent(context, user);
+  }
+  
+  Widget _buildProfileContent(BuildContext context, UserModel user) {
     return StreamBuilder<UserModel>(
-      stream: context.read<FirestoreService>().getUserStream(user.uid),
+      stream: context.read<FirestoreService>().getUserStream(user.id),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
-        if (!snapshot.hasData || snapshot.hasError) {
-          return const Center(child: Text('Failed to load profile'));
+        if (snapshot.hasError) {
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Error loading profile'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Try reloading the stream
+                      context.read<FirestoreService>().getUserStream(user.id);
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
-        final userData = snapshot.data!;
+        // If no data, use the user data we already have from AuthService
+        final userData = snapshot.data ?? user;
 
         return Scaffold(
           body: CustomScrollView(

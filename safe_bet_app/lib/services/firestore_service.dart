@@ -129,10 +129,19 @@ class FirestoreService {
 
   /// Gets a stream of user data
   Stream<UserModel> getUserStream(String userId) {
-    return usersCollection
-        .doc(userId)
-        .snapshots()
-        .map((snapshot) => snapshot.data()!);
+    try {
+      return usersCollection
+          .doc(userId)
+          .snapshots()
+          .map((doc) => doc.data()!)
+          .handleError((error) {
+            debugPrint('Error in getUserStream: $error');
+            throw error;
+          });
+    } catch (e) {
+      debugPrint('Error setting up user stream: $e');
+      rethrow;
+    }
   }
 
   /// Updates user notification settings

@@ -18,54 +18,38 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     debugPrint('AuthWrapper: Building with auth state changes');
-    return StreamBuilder<UserModel?>(
-      stream: context.read<AuthService>().user,
-      builder: (context, snapshot) {
-        debugPrint('AuthWrapper: Connection state: ${snapshot.connectionState}');
-        debugPrint('AuthWrapper: Has data: ${snapshot.hasData}');
-        debugPrint('AuthWrapper: Has error: ${snapshot.hasError}');
-        if (snapshot.hasError) {
-          debugPrint('AuthWrapper: Error: ${snapshot.error}');
-          debugPrint('AuthWrapper: Stack trace: ${snapshot.stackTrace}');
-        }
+    
+    // Get the current user from the StreamProvider
+    final user = context.watch<UserModel?>();
+    debugPrint('AuthWrapper: User data: ${user?.toMap()}');
+    
+    if (user == null) {
+      debugPrint('AuthWrapper: No user, showing sign-in screen');
+      return const CustomSignInScreen();
+    }
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          debugPrint('AuthWrapper: Waiting for auth state...');
+    // Check if user has completed profile setup
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.id)
+          .get(),
+      builder: (context, userSnapshot) {
+        if (userSnapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        final user = snapshot.data;
-        debugPrint('AuthWrapper: User data: ${user?.toMap()}');
-        if (user == null) {
-          debugPrint('AuthWrapper: No user, showing sign-in screen');
+        if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+          final firebaseUser = FirebaseAuth.instance.currentUser;
+          if (firebaseUser != null) {
+            return ProfileSetupScreen(user: firebaseUser);
+          }
           return const CustomSignInScreen();
         }
 
-        return FutureBuilder<DocumentSnapshot>(
-          future: FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.id)
-              .get(),
-          builder: (context, userSnapshot) {
-            if (userSnapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-              final firebaseUser = FirebaseAuth.instance.currentUser;
-              if (firebaseUser != null) {
-                return ProfileSetupScreen(user: firebaseUser);
-              }
-              return const CustomSignInScreen();
-            }
-
-            return const MainNavigation();
-          },
-        );
+        return const MainNavigation();
       },
     );
   }
