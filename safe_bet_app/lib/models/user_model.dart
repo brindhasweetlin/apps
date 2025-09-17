@@ -60,8 +60,8 @@ class UserModel {
   }
 
   /// Creates a UserModel from Firestore document
-  factory UserModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory UserModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data()!;
     return UserModel(
       id: doc.id,
       email: data['email'] ?? '',
@@ -69,7 +69,7 @@ class UserModel {
       photoUrl: data['photoUrl'],
       username: data['username'],
       bio: data['bio'],
-      credits: (data['credits'] ?? 100).toInt(),
+      credits: (data['credits'] as num?)?.toInt() ?? 1000,
       emailVerified: data['emailVerified'] ?? false,
       isAnonymous: data['isAnonymous'] ?? false,
       notificationsEnabled: data['notificationsEnabled'] ?? true,
@@ -80,13 +80,15 @@ class UserModel {
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
     );
   }
+  
+  /// Creates a UserModel from a Firestore QueryDocumentSnapshot
+  factory UserModel.fromQueryDocumentSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    return UserModel.fromFirestore(doc);
+  }
 
   /// Creates a UserModel from a JSON map
   factory UserModel.fromJson(Map<String, dynamic> json) => 
       _$UserModelFromJson(json);
-
-  /// Converts the UserModel to a JSON map
-  Map<String, dynamic> toJson() => _$UserModelToJson(this);
 
   /// Converts the UserModel to a map for Firestore
   Map<String, dynamic> toMap() {
@@ -105,8 +107,12 @@ class UserModel {
       'betIds': betIds,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      if (lastLoginAt != null) 'lastLoginAt': Timestamp.fromDate(lastLoginAt!),
     };
   }
+  
+  /// Converts the UserModel to a JSON map
+  Map<String, dynamic> toJson() => _$UserModelToJson(this);
 
   UserModel copyWith({
     String? email,

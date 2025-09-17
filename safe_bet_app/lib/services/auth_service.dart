@@ -47,12 +47,11 @@ class AuthService {
       
       try {
         debugPrint('AuthService: Fetching user data from Firestore for UID: ${firebaseUser.uid}');
-        final userDoc = await _firestoreService.getUser(firebaseUser.uid);
+        final userDoc = await _firestoreService.usersCollection.doc(firebaseUser.uid).get();
         
         if (userDoc.exists) {
           debugPrint('AuthService: Found existing user in Firestore');
-          final userData = userDoc.data() as Map<String, dynamic>;
-          return UserModel.fromJson(userData);
+          return userDoc.data();
         } else {
           debugPrint('AuthService: Creating new user profile in Firestore');
           // Create new user profile in Firestore if not exists
@@ -73,7 +72,7 @@ class AuthService {
           );
           
           // Save the new user to Firestore
-          await _firestoreService.users.doc(firebaseUser.uid).set(newUser.toJson());
+          await _firestoreService.usersCollection.doc(firebaseUser.uid).set(newUser);
           debugPrint('AuthService: Successfully created new user');
           return newUser;
         }
@@ -98,17 +97,19 @@ class AuthService {
         email: email,
         password: password,
       );
-      
+
       if (credential.user == null) {
         throw Exception('Failed to sign in');
       }
+
+      // Get user data from Firestore
+      final userDoc = await _firestoreService.usersCollection.doc(credential.user!.uid).get();
       
-      return UserModel(
-        id: credential.user!.uid,
-        email: credential.user!.email ?? '',
-        displayName: credential.user!.displayName,
-        photoUrl: credential.user!.photoURL,
-      );
+      if (!userDoc.exists) {
+        throw Exception('User data not found');
+      }
+      
+      return userDoc.data()!;
     } catch (e) {
       rethrow;
     }
@@ -135,18 +136,27 @@ class AuthService {
       await credential.user!.updateDisplayName(displayName);
       await credential.user!.reload();
       
-      // Create user profile in Firestore
-      await _firestoreService.createUserProfile(
-        userId: credential.user!.uid,
+      // Create new user profile in Firestore
+      final newUser = UserModel(
+        id: credential.user!.uid,
         email: email,
         displayName: displayName,
         photoUrl: credential.user!.photoURL,
-        username: email.split('@')[0],
+        username: email.split('@')[0].toLowerCase(),
+        credits: 100,
+        followingTeamIds: [],
+        betIds: [],
+        notificationsEnabled: true,
+        emailVerified: false,
+        isAnonymous: false,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
       
-      // Get the newly created user
-      final userDoc = await _firestoreService.getUser(credential.user!.uid);
-      return UserModel.fromFirestore(userDoc);
+      // Save the new user to Firestore
+      await _firestoreService.usersCollection.doc(credential.user!.uid).set(newUser);
+      debugPrint('AuthService: Successfully created new user');
+      return newUser;
     } catch (e) {
       rethrow;
     }
@@ -180,23 +190,37 @@ class AuthService {
       }
       
       // Check if user exists in Firestore
-      final userDoc = await _firestoreService.getUser(userCredential.user!.uid);
-      print(userDoc);
-      if (!userDoc.exists) {
-        // Create new user profile in Firestore if not exists
-        await _firestoreService.createUserProfile(
-          userId: userCredential.user!.uid,
-          email: userCredential.user!.email ?? '',
-          displayName: userCredential.user!.displayName,
-          photoUrl: userCredential.user!.photoURL,
-          username: userCredential.user!.email?.split('@')[0],
-        );
+      try {
+        final userDoc = await _firestoreService.usersCollection.doc(userCredential.user!.uid).get();
         
-        // Get the newly created user
-        final newUserDoc = await _firestoreService.getUser(userCredential.user!.uid);
-        return UserModel.fromFirestore(newUserDoc);
-      } else {
-        return UserModel.fromFirestore(userDoc);
+        if (!userDoc.exists) {
+          // Create new user profile in Firestore if not exists
+          final newUser = UserModel(
+            id: userCredential.user!.uid,
+            email: userCredential.user!.email ?? 'no-email@example.com',
+            displayName: userCredential.user!.displayName ?? 'User ${userCredential.user!.uid.substring(0, 6)}',
+            photoUrl: userCredential.user!.photoURL,
+            username: userCredential.user!.email?.split('@')[0]?.toLowerCase() ?? 'user_${userCredential.user!.uid.substring(0, 6)}',
+            credits: 100,
+            followingTeamIds: [],
+            betIds: [],
+            notificationsEnabled: true,
+            emailVerified: userCredential.user!.emailVerified,
+            isAnonymous: userCredential.user!.isAnonymous,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+          
+          // Save the new user to Firestore
+          await _firestoreService.usersCollection.doc(userCredential.user!.uid).set(newUser);
+          debugPrint('AuthService: Successfully created new user');
+          return newUser;
+        } else {
+          return userDoc.data()!;
+        }
+      } catch (e) {
+        debugPrint('Error in signInWithGoogle: $e');
+        rethrow;
       }
     } catch (e) {
       rethrow;

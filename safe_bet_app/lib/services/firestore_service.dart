@@ -12,7 +12,26 @@ class FirestoreService {
   // Users Collection
   CollectionReference<UserModel> get usersCollection =>
       _firestore.collection(AppConstants.usersCollection).withConverter<UserModel>(
-            fromFirestore: (snapshot, _) => UserModel.fromFirestore(snapshot),
+            fromFirestore: (snapshot, _) {
+              final data = snapshot.data()!;
+              return UserModel(
+                id: snapshot.id,
+                email: data['email'] ?? '',
+                displayName: data['displayName'],
+                photoUrl: data['photoUrl'],
+                username: data['username'],
+                bio: data['bio'],
+                credits: (data['credits'] as num?)?.toInt() ?? 1000,
+                emailVerified: data['emailVerified'] ?? false,
+                isAnonymous: data['isAnonymous'] ?? false,
+                notificationsEnabled: data['notificationsEnabled'] ?? true,
+                followingTeamIds: List<String>.from(data['followingTeamIds'] ?? []),
+                betIds: List<String>.from(data['betIds'] ?? []),
+                createdAt: (data['createdAt'] as Timestamp).toDate(),
+                updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+                lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
+              );
+            },
             toFirestore: (user, _) => user.toMap(),
           );
 
