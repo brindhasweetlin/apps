@@ -43,7 +43,12 @@ class FirestoreService {
     );
   }
 
-  // Events Collection
+  // Raw collections without model conversion
+  CollectionReference<Map<String, dynamic>> get _rawEventsCollection {
+    return _firestore.collection(AppConstants.eventsCollection);
+  }
+
+  // Events Collection with model conversion
   CollectionReference<EventModel> get eventsCollection {
     return _firestore.collection(AppConstants.eventsCollection).withConverter<EventModel>(
       fromFirestore: (snapshot, _) => EventModel.fromFirestore(snapshot),
@@ -246,29 +251,38 @@ class FirestoreService {
 
   // Event Operations
   Stream<List<EventModel>> getUpcomingEvents({int limit = 10}) {
-    return eventsCollection
+    return _rawEventsCollection
         .where('startTime', isGreaterThanOrEqualTo: DateTime.now())
         .orderBy('startTime')
         .limit(limit)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+        .map((snapshot) => snapshot.docs
+            .map((doc) => EventModel.fromFirestore(doc))
+            .toList());
   }
 
   Stream<List<EventModel>> getLiveEvents({int limit = 10}) {
-    return eventsCollection
+    return _rawEventsCollection
         .where('status', isEqualTo: 'ongoing')
         .orderBy('startTime')
         .limit(limit)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+        .map((snapshot) => snapshot.docs
+            .map((doc) => EventModel.fromFirestore(doc))
+            .toList());
   }
 
   Future<EventModel> getEvent(String eventId) async {
-    final doc = await eventsCollection.doc(eventId).get();
-    if (!doc.exists) {
-      throw Exception('Event not found');
+    try {
+      final doc = await _rawEventsCollection.doc(eventId).get();
+      if (!doc.exists) {
+        throw Exception('Event not found');
+      }
+      return EventModel.fromFirestore(doc);
+    } catch (e) {
+      debugPrint('Error getting event $eventId: $e');
+      rethrow;
     }
-    return doc.data()!;
   }
 
   // Place a new bet

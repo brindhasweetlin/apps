@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 enum EventStatus {
   upcoming,
@@ -46,54 +47,95 @@ class EventModel {
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
-  factory EventModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    
-    // Convert status string to enum
-    EventStatus status;
-    switch ((data['status'] as String?)?.toLowerCase()) {
-      case 'ongoing':
-        status = EventStatus.ongoing;
-        break;
-      case 'completed':
-        status = EventStatus.completed;
-        break;
-      case 'cancelled':
-        status = EventStatus.cancelled;
-        break;
-      case 'upcoming':
-      default:
-        status = EventStatus.upcoming;
-    }
-    
-    // Convert odds map
-    final oddsMap = <String, double>{};
-    if (data['odds'] != null) {
-      (data['odds'] as Map<String, dynamic>).forEach((key, value) {
-        if (value is num) {
-          oddsMap[key] = value.toDouble();
-        }
-      });
-    }
+  // Helper method to parse dates safely
+  static DateTime? _parseDate(dynamic timestamp) {
+    if (timestamp == null) return null;
+    if (timestamp is Timestamp) return timestamp.toDate();
+    if (timestamp is DateTime) return timestamp;
+    return null;
+  }
 
-    return EventModel(
-      id: doc.id,
-      title: data['title'] ?? 'Untitled Event',
-      description: data['description'] ?? '',
-      imageUrl: data['imageUrl'],
-      streamUrl: data['streamUrl'],
-      sport: data['sport'] ?? 'General',
-      teamIds: List<String>.from(data['teamIds'] ?? []),
-      odds: oddsMap,
-      startTime: (data['startTime'] as Timestamp).toDate(),
-      endTime: (data['endTime'] as Timestamp?)?.toDate(),
-      status: status,
-      winningTeamId: data['winningTeamId'],
-      totalPot: (data['totalPot'] ?? 0).toInt(),
-      participantCount: (data['participantCount'] ?? 0).toInt(),
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-    );
+  // Helper method to parse status
+  static EventStatus _parseStatus(String? statusStr) {
+    try {
+      final status = statusStr?.toLowerCase() ?? 'upcoming';
+      return EventStatus.values.firstWhere(
+        (e) => e.toString().split('.').last.toLowerCase() == status,
+        orElse: () => EventStatus.upcoming,
+      );
+    } catch (e) {
+      // Using print instead of debugPrint since this is a static method
+      print('Error parsing status: $statusStr, defaulting to upcoming');
+      return EventStatus.upcoming;
+    }
+  }
+
+  // Helper method to parse odds map
+  static Map<String, double> _parseOdds(Map<String, dynamic>? oddsMap) {
+    final result = <String, double>{};
+    if (oddsMap != null) {
+      try {
+        oddsMap.forEach((key, value) {
+          if (value is num) {
+            result[key] = value.toDouble();
+          }
+        });
+      } catch (e) {
+        // Using print instead of debugPrint since this is a static method
+        print('Error parsing odds: $e');
+      }
+    }
+    return result;
+  }
+
+  factory EventModel.fromFirestore(DocumentSnapshot doc) {
+    try {
+      final data = doc.data() as Map<String, dynamic>? ?? {};
+      
+      return EventModel(
+        id: doc.id,
+        title: (data['title'] ?? 'Untitled Event').toString(),
+        description: (data['description'] ?? '').toString(),
+        imageUrl: data['imageUrl']?.toString(),
+        streamUrl: data['streamUrl']?.toString(),
+        sport: (data['sport'] ?? 'General').toString(),
+        teamIds: data['teamIds'] is List 
+            ? List<String>.from(
+                (data['teamIds'] as List).map((e) => e.toString()),
+              )
+            : <String>[],
+        odds: _parseOdds(data['odds'] as Map<String, dynamic>?),
+        startTime: _parseDate(data['startTime']) ?? DateTime.now(),
+        endTime: _parseDate(data['endTime']),
+        status: _parseStatus(data['status'] as String?),
+        winningTeamId: data['winningTeamId']?.toString(),
+        totalPot: (data['totalPot'] is int) 
+            ? data['totalPot'] as int 
+            : (data['totalPot'] as num?)?.toInt() ?? 0,
+        participantCount: (data['participantCount'] is int)
+            ? data['participantCount'] as int
+            : (data['participantCount'] as num?)?.toInt() ?? 0,
+        createdAt: _parseDate(data['createdAt']) ?? DateTime.now(),
+        updatedAt: _parseDate(data['updatedAt']) ?? DateTime.now(),
+      );
+    } catch (e, stackTrace) {
+      // Using print instead of debugPrint since this is a factory constructor
+      print('Error in EventModel.fromFirestore: $e');
+      print('Stack trace: $stackTrace');
+      print('Document ID: ${doc.id}');
+      
+      // Return a default event with error information
+      return EventModel(
+        id: doc.id,
+        title: 'Error Loading Event',
+        description: 'Failed to load event data',
+        sport: 'Error',
+        teamIds: [],
+        odds: {},
+        startTime: DateTime.now(),
+        status: EventStatus.upcoming,
+      );
+    }
   }
 
   Map<String, dynamic> toMap() {
@@ -154,8 +196,8 @@ class EventModel {
       imageUrl: imageUrl ?? this.imageUrl,
       streamUrl: streamUrl ?? this.streamUrl,
       sport: sport ?? this.sport,
-      teamIds: teamIds ?? this.teamIds,
-      odds: odds ?? this.odds,
+      teamIds: teamIds ?? List<String>.from(this.teamIds),
+      odds: odds ?? Map<String, double>.from(this.odds),
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       status: status ?? this.status,
@@ -163,6 +205,7 @@ class EventModel {
       totalPot: totalPot ?? this.totalPot,
       participantCount: participantCount ?? this.participantCount,
       createdAt: createdAt,
+      updatedAt: DateTime.now(),
     );
   }
 
