@@ -19,7 +19,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    
+
     return Scaffold(
       backgroundColor: AppTheme.darkTheme.scaffoldBackgroundColor,
       body: CustomScrollView(
@@ -27,12 +27,17 @@ class HomeScreen extends StatelessWidget {
           // App Bar with Balance
           SliverAppBar(
             backgroundColor: AppTheme.primaryColor,
-            expandedHeight:200,
+            expandedHeight: 200,
             floating: true,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                padding: const EdgeInsets.only(top: 50, left: 16, right: 16, bottom: 16),
+                padding: const EdgeInsets.only(
+                  top: 50,
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
@@ -65,73 +70,84 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const Spacer(),
                     // Balance Card
-                  Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.secondaryColor,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.secondaryColor,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          const CircleAvatar(
+                            backgroundColor: AppTheme.accentColor,
+                            radius: 20,
+                            child: Icon(
+                              Icons.account_balance_wallet,
+                              color: Colors.white,
+                              size: 20,
                             ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            const CircleAvatar(
-                              backgroundColor: AppTheme.accentColor,
-                              radius: 20,
-                              child: Icon(Icons.account_balance_wallet, color: Colors.white, size: 20),
-                            ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Available Balance',
-                                  style: GoogleFonts.inter(
-                                    color: AppTheme.textSecondary,
-                                    fontSize: 12,
-                                  ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Available Balance',
+                                style: GoogleFonts.inter(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 12,
                                 ),
-                                const SizedBox(height: 4),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '\$1,250.50',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.accentColor.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.add,
+                                  color: AppTheme.accentColor,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 4),
                                 Text(
-                                  '\$1,250.50',
+                                  'Deposit',
                                   style: GoogleFonts.inter(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.accentColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
                             ),
-                            const Spacer(),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: AppTheme.accentColor.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.add, color: AppTheme.accentColor, size: 16),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Deposit',
-                                    style: GoogleFonts.inter(
-                                      color: AppTheme.accentColor,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
+                    ),
                   ],
                 ),
               ),
@@ -154,30 +170,41 @@ class HomeScreen extends StatelessWidget {
                     title: 'Live Matches',
                     onSeeAll: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const LiveEventsScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const LiveEventsScreen(),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
-                    height: 250,
+                    height: 257,
                     child: StreamBuilder<List<EventModel>>(
-                      stream: context.read<FirestoreService>().getLiveEvents(limit: 5),
+                      stream: context.read<FirestoreService>().getLiveEvents(
+                        limit: 5,
+                      ),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator(color: AppTheme.accentColor));
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: AppTheme.accentColor,
+                            ),
+                          );
                         }
-                        
+
                         final events = snapshot.data ?? [];
-                        
+
                         if (events.isEmpty) {
                           return Center(
                             child: Text(
                               'No live matches at the moment',
-                              style: GoogleFonts.inter(color: AppTheme.textSecondary),
+                              style: GoogleFonts.inter(
+                                color: AppTheme.textSecondary,
+                              ),
                             ),
                           );
                         }
-                        
+
                         return ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: events.length,
@@ -190,7 +217,9 @@ class HomeScreen extends StatelessWidget {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => PlaceBetScreen(eventId: events[index].id),
+                                      builder: (context) => PlaceBetScreen(
+                                        eventId: events[index].id,
+                                      ),
                                     ),
                                   );
                                 },
@@ -201,122 +230,131 @@ class HomeScreen extends StatelessWidget {
                       },
                     ),
                   ),
-            const SizedBox(height: 32),
 
-            // Upcoming Events Section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Upcoming Events',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.normal,
-                      ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const UpcomingEventsScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text('See All'),
-                ),
-              ],
-            ),
+                  const SizedBox(height: 32),
 
-            StreamBuilder<List<EventModel>>(
-              stream: context.read<FirestoreService>().getUpcomingEvents(limit: 3),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                
-                final events = snapshot.data ?? [];
-                
-                if (events.isEmpty) {
-                  return const Center(
-                    child: Text('No upcoming events scheduled'),
-                  );
-                }
-                
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: events.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: EventCard(
-                        event: events[index],
-                        onTap: () {
+                  // Upcoming Events Section
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Upcoming Events',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.normal),
+                      ),
+                      TextButton(
+                        onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => PlaceBetScreen(eventId: events[index].id),
+                              builder: (context) =>
+                                  const UpcomingEventsScreen(),
                             ),
                           );
                         },
+                        child: const Text('See All'),
                       ),
-                    );
-                  },
-                );
-              },
-            ),
-            const SizedBox(height: 24),
+                    ],
+                  ),
 
-            // Popular Teams Section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Popular Teams',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Navigate to all teams
-                  },
-                  child: const Text('See All'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: StreamBuilder<List<TeamModel>>(
-                stream: context.read<FirestoreService>().getPopularTeams(limit: 10),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  
-                  final teams = snapshot.data ?? [];
-                  
-                  if (teams.isEmpty) {
-                    return const Center(
-                      child: Text('No teams available'),
-                    );
-                  }
-                  
-                  return ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: teams.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 16.0),
-                        child: TeamCard(team: teams[index]),
+                  StreamBuilder<List<EventModel>>(
+                    stream: context.read<FirestoreService>().getUpcomingEvents(
+                      limit: 3,
+                    ),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      final events = snapshot.data ?? [];
+
+                      if (events.isEmpty) {
+                        return const Center(
+                          child: Text('No upcoming events scheduled'),
+                        );
+                      }
+
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: events.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            child: EventCard(
+                              event: events[index],
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PlaceBetScreen(
+                                      eventId: events[index].id,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 24),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Popular Teams Section
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Popular Teams',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // Navigate to all teams
+                        },
+                        child: const Text('See All'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 200,
+                    child: StreamBuilder<List<TeamModel>>(
+                      stream: context.read<FirestoreService>().getPopularTeams(
+                        limit: 10,
+                      ),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        final teams = snapshot.data ?? [];
+
+                        if (teams.isEmpty) {
+                          return const Center(
+                            child: Text('No teams available'),
+                          );
+                        }
+
+                        return ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: teams.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 16.0),
+                              child: TeamCard(team: teams[index]),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -336,21 +374,13 @@ class HomeScreen extends StatelessWidget {
           label: 'Sports',
           onTap: () {},
         ),
-        _buildQuickAction(
-          icon: Icons.bolt,
-          label: 'Live',
-          onTap: () {},
-        ),
+        _buildQuickAction(icon: Icons.bolt, label: 'Live', onTap: () {}),
         _buildQuickAction(
           icon: Icons.star_border,
           label: 'Favorites',
           onTap: () {},
         ),
-        _buildQuickAction(
-          icon: Icons.history,
-          label: 'History',
-          onTap: () {},
-        ),
+        _buildQuickAction(icon: Icons.history, label: 'History', onTap: () {}),
       ],
     );
   }
@@ -387,7 +417,8 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, {
+  Widget _buildSectionHeader(
+    BuildContext context, {
     required String title,
     required VoidCallback onSeeAll,
   }) {

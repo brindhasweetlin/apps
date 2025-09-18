@@ -233,20 +233,20 @@ class FirestoreService {
   }
 
   // Team Operations
-  Stream<List<TeamModel>> getPopularTeams({int limit = 10}) {
-    return teamsCollection
-        .orderBy('followerCount', descending: true)
-        .limit(limit)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
-  }
-
   Future<TeamModel> getTeam(String teamId) async {
     final doc = await teamsCollection.doc(teamId).get();
     if (!doc.exists) {
       throw Exception('Team not found');
     }
     return doc.data()!;
+  }
+
+  Stream<List<TeamModel>> getPopularTeams({int limit = 10}) {
+    return teamsCollection
+        .orderBy('followerCount', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
   // Event Operations
