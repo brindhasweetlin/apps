@@ -329,11 +329,42 @@ class FirestoreService {
   }
 
   Stream<List<BetModel>> getUserBets(String userId) {
-    return betsCollection
-        .where('userId', isEqualTo: userId)
-        .orderBy('placedAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+    try {
+      // Use _rawBetsCollection to avoid double conversion
+      return _rawBetsCollection
+          .where('userId', isEqualTo: userId)
+          .orderBy('placedAt', descending: true)
+          .snapshots()
+          .handleError((error) {
+            debugPrint('Error in getUserBets stream: $error');
+            return <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+          })
+          .map((snapshot) {
+            try {
+              return snapshot.docs
+                  .map((doc) {
+                    try {
+                      return BetModel.fromFirestore(doc);
+                    } catch (e, stackTrace) {
+                      debugPrint('Error parsing bet ${doc.id}: $e');
+                      debugPrint('Stack trace: $stackTrace');
+                      debugPrint('Document data: ${doc.data()}');
+                      return null;
+                    }
+                  })
+                  .whereType<BetModel>()
+                  .toList();
+            } catch (e, stackTrace) {
+              debugPrint('Error mapping bets: $e');
+              debugPrint('Stack trace: $stackTrace');
+              return <BetModel>[];
+            }
+          });
+    } catch (e, stackTrace) {
+      debugPrint('Error in getUserBets: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return Stream.value(<BetModel>[]);
+    }
   }
 
   /// Get all bets for a specific event

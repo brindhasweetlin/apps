@@ -68,28 +68,63 @@ class _BetCard extends StatelessWidget {
     return FutureBuilder<Map<String, dynamic>>(
       future: _loadBetDetails(context, bet),
       builder: (context, snapshot) {
+        // Show loading state
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Card(
-            child: ListTile(
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+            child: const ListTile(
               leading: CircularProgressIndicator(),
               title: Text('Loading bet details...'),
             ),
           );
         }
 
+        // Show error state
         if (snapshot.hasError) {
           return Card(
+            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
             child: ListTile(
-              leading: const Icon(Icons.error, color: Colors.red),
-              title: const Text('Error loading bet'),
-              subtitle: Text(snapshot.error.toString()),
+              leading: const Icon(Icons.error_outline, color: Colors.orange),
+              title: const Text('Error loading bet details'),
+              subtitle: Text('Bet ID: ${bet.id}'),
+              trailing: IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                  // Trigger a rebuild to retry loading
+                  (context as Element).markNeedsBuild();
+                },
+              ),
+            ),
+          );
+        }
+
+        // Handle missing data
+        if (!snapshot.hasData) {
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+            child: const ListTile(
+              leading: Icon(Icons.warning_amber, color: Colors.amber),
+              title: Text('Bet data not available'),
+              subtitle: Text('Some information may be missing'),
             ),
           );
         }
 
         final details = snapshot.data!;
-        final event = details['event'] as EventModel;
+        final event = details['event'] as EventModel?;
         final team = details['team'] as TeamModel?;
+        
+        if (event == null) {
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+            child: ListTile(
+              leading: const Icon(Icons.event_busy, color: Colors.red),
+              title: const Text('Event not found'),
+              subtitle: Text('Bet ID: ${bet.id}'),
+            ),
+          );
+        }
+        
         final isWon = bet.status == BetStatus.won;
         final isLost = bet.status == BetStatus.lost;
         final isPending = bet.status == BetStatus.pending;
@@ -244,35 +279,56 @@ class _BetCard extends StatelessWidget {
   Future<Map<String, dynamic>> _loadBetDetails(
       BuildContext context, BetModel bet) async {
     try {
+      debugPrint('Loading details for bet: ${bet.id}');
       final firestoreService = context.read<FirestoreService>();
       
       // Get event data
-      final eventDoc = await firestoreService.eventsCollection.doc(bet.eventId).get();
-      if (!eventDoc.exists) {
-        throw Exception('Event not found');
+      EventModel? event;
+      try {
+        final eventDoc = await firestoreService.eventsCollection.doc(bet.eventId).get();
+        if (eventDoc.exists) {
+          event = eventDoc.data();
+          debugPrint('Found event: ${event?.title} (${event?.id})');
+        } else {
+          debugPrint('Event not found for bet: ${bet.id}, eventId: ${bet.eventId}');
+        }
+      } catch (e) {
+        debugPrint('Error loading event for bet ${bet.id}: $e');
       }
-      final event = eventDoc.data()!;
       
       // Get team data if teamId exists
       TeamModel? team;
       if (bet.teamId != null && bet.teamId!.isNotEmpty) {
         try {
+          debugPrint('Loading team: ${bet.teamId}');
           final teamDoc = await firestoreService.teamsCollection.doc(bet.teamId).get();
           if (teamDoc.exists) {
             team = teamDoc.data();
+            debugPrint('Found team: ${team?.name} (${team?.id})');
+          } else {
+            debugPrint('Team not found: ${bet.teamId}');
           }
         } catch (e) {
-          debugPrint('Error loading team: $e');
+          debugPrint('Error loading team ${bet.teamId}: $e');
         }
       }
       
-      return {
+      final result = {
         'event': event,
         'team': team,
       };
-    } catch (e) {
-      debugPrint('Error loading bet details: $e');
-      rethrow;
+      
+      debugPrint('Successfully loaded bet details for bet: ${bet.id}');
+      return result;
+      
+    } catch (e, stackTrace) {
+      debugPrint('Error in _loadBetDetails for bet ${bet.id}: $e');
+      debugPrint('Stack trace: $stackTrace');
+      // Return empty data instead of throwing to prevent breaking the UI
+      return {
+        'event': null,
+        'team': null,
+      };
     }
   }
 }

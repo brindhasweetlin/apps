@@ -8,6 +8,7 @@ import '../widgets/profile_header.dart';
 import '../constants/app_constants.dart';
 import 'edit_profile_screen.dart';
 import 'settings_screen.dart';
+import 'betting_history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -207,7 +208,12 @@ class ProfileScreen extends StatelessWidget {
             icon: Icons.history_outlined,
             title: 'Bet History',
             onTap: () {
-              // Navigate to bet history
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BettingHistoryScreen(),
+                ),
+              );
             },
           ),
           const Divider(height: 1),

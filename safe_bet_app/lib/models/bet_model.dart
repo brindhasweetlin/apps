@@ -36,42 +36,63 @@ class BetModel {
   })  : status = status ?? BetStatus.pending,
         placedAt = placedAt ?? DateTime.now();
 
-  factory BetModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    
-    // Convert status string to enum
-    BetStatus status;
-    switch ((data['status'] as String?)?.toLowerCase()) {
-      case 'won':
-        status = BetStatus.won;
-        break;
-      case 'lost':
-        status = BetStatus.lost;
-        break;
-      case 'refunded':
-        status = BetStatus.refunded;
-        break;
-      case 'cancelled':
-        status = BetStatus.cancelled;
-        break;
-      case 'pending':
-      default:
-        status = BetStatus.pending;
-    }
+  factory BetModel.fromFirestore(dynamic doc) {
+    try {
+      // Handle both DocumentSnapshot and QueryDocumentSnapshot
+      final data = doc.data() as Map<String, dynamic>?;
+      if (data == null) {
+        throw Exception('Document data is null');
+      }
+      
+      // Convert status string to enum
+      BetStatus status;
+      final statusStr = (data['status'] as String?)?.toLowerCase();
+      switch (statusStr) {
+        case 'won':
+          status = BetStatus.won;
+          break;
+        case 'lost':
+          status = BetStatus.lost;
+          break;
+        case 'refunded':
+          status = BetStatus.refunded;
+          break;
+        case 'cancelled':
+          status = BetStatus.cancelled;
+          break;
+        case 'pending':
+        default:
+          status = BetStatus.pending;
+      }
 
-    return BetModel(
-      id: doc.id,
-      userId: data['userId'],
-      eventId: data['eventId'],
-      teamId: data['teamId'],
-      amount: (data['amount'] ?? 0).toInt(),
-      odds: (data['odds'] ?? 1.0).toDouble(),
-      potentialWinnings: (data['potentialWinnings'] ?? 0).toInt(),
-      status: status,
-      placedAt: (data['placedAt'] as Timestamp).toDate(),
-      resolvedAt: (data['resolvedAt'] as Timestamp?)?.toDate(),
-      isNoLossBet: data['isNoLossBet'] ?? true,
-    );
+      // Safely parse dates
+      DateTime? parseDate(dynamic timestamp) {
+        if (timestamp == null) return null;
+        if (timestamp is Timestamp) return timestamp.toDate();
+        if (timestamp is DateTime) return timestamp;
+        return null;
+      }
+
+      return BetModel(
+        id: doc.id,
+        userId: data['userId']?.toString() ?? '',
+        eventId: data['eventId']?.toString() ?? '',
+        teamId: data['teamId']?.toString() ?? '',
+        amount: (data['amount'] is int) ? data['amount'] as int : (data['amount'] as num?)?.toInt() ?? 0,
+        odds: (data['odds'] is double) ? data['odds'] as double : (data['odds'] as num?)?.toDouble() ?? 1.0,
+        potentialWinnings: (data['potentialWinnings'] is int) ? data['potentialWinnings'] as int : (data['potentialWinnings'] as num?)?.toInt() ?? 0,
+        status: status,
+        placedAt: parseDate(data['placedAt']) ?? DateTime.now(),
+        resolvedAt: parseDate(data['resolvedAt']),
+        isNoLossBet: data['isNoLossBet'] == true,
+      );
+    } catch (e, stackTrace) {
+      print('Error in BetModel.fromFirestore: $e');
+      print('Stack trace: $stackTrace');
+      print('Document ID: ${doc.id}');
+      print('Document data: ${doc.data()}');
+      rethrow;
+    }
   }
 
   // Convert BetModel to a Map for Firestore
