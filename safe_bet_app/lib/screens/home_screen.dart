@@ -26,7 +26,7 @@ class HomeScreen extends StatelessWidget {
           // App Bar with Balance
           SliverAppBar(
             backgroundColor: AppTheme.primaryColor,
-            expandedHeight: 140,
+            expandedHeight:200,
             floating: true,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
@@ -64,73 +64,73 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const Spacer(),
                     // Balance Card
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.secondaryColor,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          const CircleAvatar(
-                            backgroundColor: AppTheme.accentColor,
-                            radius: 20,
-                            child: Icon(Icons.account_balance_wallet, color: Colors.white, size: 20),
-                          ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Available Balance',
-                                style: GoogleFonts.inter(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '\$1,250.50',
-                                style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: AppTheme.accentColor.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
+                  Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.secondaryColor,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
-                            child: Row(
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const CircleAvatar(
+                              backgroundColor: AppTheme.accentColor,
+                              radius: 20,
+                              child: Icon(Icons.account_balance_wallet, color: Colors.white, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.add, color: AppTheme.accentColor, size: 16),
-                                const SizedBox(width: 4),
                                 Text(
-                                  'Deposit',
+                                  'Available Balance',
                                   style: GoogleFonts.inter(
-                                    color: AppTheme.accentColor,
+                                    color: AppTheme.textSecondary,
                                     fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '\$1,250.50',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppTheme.accentColor.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.add, color: AppTheme.accentColor, size: 16),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Deposit',
+                                    style: GoogleFonts.inter(
+                                      color: AppTheme.accentColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -158,7 +158,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
-                    height: 220,
+                    height: 250,
                     child: StreamBuilder<List<EventModel>>(
                       stream: context.read<FirestoreService>().getLiveEvents(limit: 5),
                       builder: (context, snapshot) {
@@ -281,7 +281,7 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 120,
+              height: 200,
               child: StreamBuilder<List<TeamModel>>(
                 stream: context.read<FirestoreService>().getPopularTeams(limit: 10),
                 builder: (context, snapshot) {
@@ -386,7 +386,7 @@ class HomeScreen extends StatelessWidget {
     required VoidCallback onSeeAll,
   }) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Text(
           title,

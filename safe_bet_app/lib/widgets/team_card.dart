@@ -23,7 +23,7 @@ class TeamCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 160,
+        width: 250,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: theme.cardColor,
@@ -84,10 +84,10 @@ class TeamCard extends StatelessWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             // Stats
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildStat(
                   context,
