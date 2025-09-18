@@ -5,6 +5,7 @@ import '../models/event_model.dart';
 import '../models/team_model.dart';
 import '../widgets/event_card.dart';
 import '../widgets/team_card.dart';
+import 'place_bet_screen.dart';
 import '../constants/app_constants.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -88,7 +89,17 @@ class HomeScreen extends StatelessWidget {
                     itemBuilder: (context, index) {
                       return Padding(
                         padding: const EdgeInsets.only(right: 16.0),
-                        child: EventCard(event: events[index]),
+                        child: EventCard(
+                          event: events[index],
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PlaceBetScreen(eventId: events[index].id),
+                              ),
+                            );
+                          },
+                        ),
                       );
                     },
                   );
@@ -138,7 +149,17 @@ class HomeScreen extends StatelessWidget {
                   itemBuilder: (context, index) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16.0),
-                      child: EventCard(event: events[index]),
+                      child: EventCard(
+                        event: events[index],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PlaceBetScreen(eventId: events[index].id),
+                            ),
+                          );
+                        },
+                      ),
                     );
                   },
                 );

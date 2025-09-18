@@ -74,7 +74,8 @@ class BetModel {
     );
   }
 
-  Map<String, dynamic> toMap() {
+  // Convert BetModel to a Map for Firestore
+  Map<String, dynamic> toFirestore() {
     String statusString;
     switch (status) {
       case BetStatus.won:
@@ -94,7 +95,8 @@ class BetModel {
         statusString = 'pending';
     }
 
-    return {
+    return <String, dynamic>{
+      'id': id,
       'userId': userId,
       'eventId': eventId,
       'teamId': teamId,
@@ -108,7 +110,11 @@ class BetModel {
     };
   }
 
+  // For backward compatibility
+  Map<String, dynamic> toMap() => toFirestore();
+
   BetModel copyWith({
+    String? id,
     String? userId,
     String? eventId,
     String? teamId,
@@ -121,7 +127,7 @@ class BetModel {
     bool? isNoLossBet,
   }) {
     return BetModel(
-      id: id,
+      id: id ?? this.id,
       userId: userId ?? this.userId,
       eventId: eventId ?? this.eventId,
       teamId: teamId ?? this.teamId,
@@ -157,6 +163,7 @@ class BetModel {
     bool isNoLossBet = true,
   }) {
     final potentialWinnings = calculatePotentialWinnings(amount, odds);
+    final now = DateTime.now();
     
     return BetModel(
       id: '', // Will be set when saved to Firestore

@@ -10,51 +10,59 @@ class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Users Collection
-  CollectionReference<UserModel> get usersCollection =>
-      _firestore.collection(AppConstants.usersCollection).withConverter<UserModel>(
-            fromFirestore: (snapshot, _) {
-              final data = snapshot.data()!;
-              return UserModel(
-                id: snapshot.id,
-                email: data['email'] ?? '',
-                displayName: data['displayName'],
-                photoUrl: data['photoUrl'],
-                username: data['username'],
-                bio: data['bio'],
-                credits: (data['credits'] as num?)?.toInt() ?? 1000,
-                emailVerified: data['emailVerified'] ?? false,
-                isAnonymous: data['isAnonymous'] ?? false,
-                notificationsEnabled: data['notificationsEnabled'] ?? true,
-                followingTeamIds: List<String>.from(data['followingTeamIds'] ?? []),
-                betIds: List<String>.from(data['betIds'] ?? []),
-                createdAt: (data['createdAt'] as Timestamp).toDate(),
-                updatedAt: (data['updatedAt'] as Timestamp).toDate(),
-                lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
-              );
-            },
-            toFirestore: (user, _) => user.toMap(),
-          );
+  CollectionReference<UserModel> get usersCollection {
+    return _firestore.collection(AppConstants.usersCollection).withConverter<UserModel>(
+      fromFirestore: (snapshot, _) {
+        final data = snapshot.data()!;
+        return UserModel(
+          id: snapshot.id,
+          email: data['email'] ?? '',
+          displayName: data['displayName'],
+          photoUrl: data['photoUrl'],
+          username: data['username'],
+          bio: data['bio'],
+          credits: (data['credits'] as num?)?.toInt() ?? 1000,
+          emailVerified: data['emailVerified'] ?? false,
+          followingTeamIds: List<String>.from(data['followingTeamIds'] ?? []),
+          betIds: List<String>.from(data['betIds'] ?? []),
+          notificationsEnabled: data['notificationsEnabled'] ?? true,
+          isAnonymous: data['isAnonymous'] ?? false,
+          createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        );
+      },
+      toFirestore: (UserModel user, _) => user.toMap(),
+    );
+  }
 
   // Teams Collection
-  CollectionReference<TeamModel> get teamsCollection =>
-      _firestore.collection(AppConstants.teamsCollection).withConverter<TeamModel>(
-            fromFirestore: (snapshot, _) => TeamModel.fromFirestore(snapshot),
-            toFirestore: (team, _) => team.toMap(),
-          );
+  CollectionReference<TeamModel> get teamsCollection {
+    return _firestore.collection(AppConstants.teamsCollection).withConverter<TeamModel>(
+      fromFirestore: (snapshot, _) => TeamModel.fromFirestore(snapshot),
+      toFirestore: (TeamModel team, _) => team.toMap(),
+    );
+  }
 
   // Events Collection
-  CollectionReference<EventModel> get eventsCollection =>
-      _firestore.collection(AppConstants.eventsCollection).withConverter<EventModel>(
-            fromFirestore: (snapshot, _) => EventModel.fromFirestore(snapshot),
-            toFirestore: (event, _) => event.toMap(),
-          );
+  CollectionReference<EventModel> get eventsCollection {
+    return _firestore.collection(AppConstants.eventsCollection).withConverter<EventModel>(
+      fromFirestore: (snapshot, _) => EventModel.fromFirestore(snapshot),
+      toFirestore: (EventModel event, _) => event.toMap(),
+    );
+  }
 
-  // Bets Collection
-  CollectionReference<BetModel> get betsCollection =>
-      _firestore.collection(AppConstants.betsCollection).withConverter<BetModel>(
-            fromFirestore: (snapshot, _) => BetModel.fromFirestore(snapshot),
-            toFirestore: (bet, _) => bet.toMap(),
-          );
+  // Raw bets collection without type conversion
+  CollectionReference<Map<String, dynamic>> get _rawBetsCollection {
+    return _firestore.collection(AppConstants.betsCollection);
+  }
+
+  // Bets collection with type conversion
+  CollectionReference<BetModel> get betsCollection {
+    return _rawBetsCollection.withConverter<BetModel>(
+      fromFirestore: (snapshot, _) => BetModel.fromFirestore(snapshot),
+      toFirestore: (BetModel bet, _) => bet.toFirestore(),
+    );
+  }
 
   // User Operations
   Future<DocumentSnapshot<UserModel>> getUser(String userId) async {
@@ -263,30 +271,61 @@ class FirestoreService {
     return doc.data()!;
   }
 
-  // Bet Operations
+  // Place a new bet
   Future<BetModel> placeBet(BetModel bet) async {
-    // Start a batch write to ensure data consistency
-    final batch = _firestore.batch();
-    
-    // Add bet to bets collection
-    final betRef = betsCollection.doc();
-    final betWithId = bet.copyWith();
-    
-    // Update user's credits
-    final userRef = usersCollection.doc(bet.userId);
-    
-    // Add operations to batch
-    batch.set(betRef, betWithId.toMap()..['id'] = betRef.id);
-    batch.update(userRef, {
-      'credits': FieldValue.increment(-bet.amount),
-      'betIds': FieldValue.arrayUnion([betRef.id]),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-    
-    // Execute batch
-    await batch.commit();
-    
-    return betWithId;
+    try {
+      // Get user data to check balance
+      final userDoc = await usersCollection.doc(bet.userId).get();
+      if (!userDoc.exists) {
+        throw Exception('User not found');
+      }
+      
+      final userData = userDoc.data()!;
+      if (userData.credits < bet.amount) {
+        throw Exception('Insufficient credits');
+      }
+      
+      // Create a new bet with ID and timestamps
+      final now = DateTime.now();
+      
+      // Create a new bet with the generated ID
+      final betWithId = BetModel(
+        id: '', // Will be set by Firestore
+        userId: bet.userId,
+        eventId: bet.eventId,
+        teamId: bet.teamId,
+        amount: bet.amount,
+        odds: bet.odds,
+        potentialWinnings: bet.potentialWinnings,
+        status: BetStatus.pending,
+        placedAt: now,
+        isNoLossBet: bet.isNoLossBet,
+      );
+      
+      // Start a batch write to ensure data consistency
+      final batch = _firestore.batch();
+      
+      // Add the bet to the bets collection
+      final betRef = _rawBetsCollection.doc();
+      batch.set(betRef, betWithId.toFirestore());
+      
+      // Update user's credits and bet IDs
+      final userRef = usersCollection.doc(bet.userId);
+      batch.update(userRef, {
+        'credits': FieldValue.increment(-bet.amount),
+        'betIds': FieldValue.arrayUnion([betRef.id]),
+        'updatedAt': now,
+      });
+      
+      // Execute batch
+      await batch.commit();
+      
+      // Return the created bet with the new ID
+      return betWithId.copyWith(id: betRef.id);
+    } catch (e) {
+      debugPrint('Error placing bet: $e');
+      rethrow; // Rethrow to be handled by the caller
+    }
   }
 
   Stream<List<BetModel>> getUserBets(String userId) {
@@ -295,6 +334,33 @@ class FirestoreService {
         .orderBy('placedAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
+  /// Get all bets for a specific event
+  Stream<List<BetModel>> getEventBets(String eventId) {
+    return betsCollection
+        .where('eventId', isEqualTo: eventId)
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
+  /// Get a specific bet by ID
+  Future<BetModel> getBet(String betId) async {
+    final doc = await betsCollection.doc(betId).get();
+    if (!doc.exists) {
+      throw Exception('Bet not found');
+    }
+    return doc.data()!;
+  }
+
+  /// Update bet status
+  Future<void> updateBetStatus(String betId, String status) async {
+    await betsCollection.doc(betId).update({
+      'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+      if (status == 'won' || status == 'lost') 'resolvedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   // Follow/Unfollow Team
