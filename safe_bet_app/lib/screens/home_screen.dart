@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/firestore_service.dart';
 import '../models/event_model.dart';
+import 'upcoming_events_screen.dart';
 import '../models/team_model.dart';
 import '../widgets/event_card.dart';
 import '../widgets/team_card.dart';
@@ -200,7 +201,7 @@ class HomeScreen extends StatelessWidget {
                       },
                     ),
                   ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
 
             // Upcoming Events Section
             Row(
@@ -209,18 +210,23 @@ class HomeScreen extends StatelessWidget {
                 Text(
                   'Upcoming Events',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.normal,
                       ),
                 ),
                 TextButton(
                   onPressed: () {
-                    // Navigate to all upcoming events
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const UpcomingEventsScreen(),
+                      ),
+                    );
                   },
                   child: const Text('See All'),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+
             StreamBuilder<List<EventModel>>(
               stream: context.read<FirestoreService>().getUpcomingEvents(limit: 3),
               builder: (context, snapshot) {
