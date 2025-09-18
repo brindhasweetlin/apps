@@ -18,7 +18,7 @@ class EventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isLive = event.status == EventStatus.ongoing;
     final teams = event.teamIds.take(2).toList();
-
+    
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -55,8 +55,7 @@ class EventCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppTheme.accentColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(4),
@@ -73,8 +72,7 @@ class EventCard extends StatelessWidget {
                   ),
                   if (isLive)
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(4),
@@ -115,7 +113,7 @@ class EventCard extends StatelessWidget {
                 ],
               ),
             ),
-
+            
             // Teams and Odds
             Padding(
               padding: const EdgeInsets.all(16),
@@ -128,7 +126,7 @@ class EventCard extends StatelessWidget {
                     isSelected: false,
                     onTap: onTap,
                   ),
-
+                  
                   // VS Divider
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 8),
@@ -138,7 +136,7 @@ class EventCard extends StatelessWidget {
                       thickness: 1,
                     ),
                   ),
-
+                  
                   // Team 2
                   _buildTeamRow(
                     teamName: teams.length > 1 ? teams[1] : 'Team 2',
@@ -149,7 +147,7 @@ class EventCard extends StatelessWidget {
                 ],
               ),
             ),
-
+            
             // Bet Now Button
             GestureDetector(
               onTap: onTap,
@@ -173,10 +171,10 @@ class EventCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Center(
+                child: const Center(
                   child: Text(
                     'BET NOW',
-                    style: GoogleFonts.inter(
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -203,12 +201,10 @@ class EventCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.accentColor.withOpacity(0.1) : Colors
-              .transparent,
+          color: isSelected ? AppTheme.accentColor.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
-          border: isSelected
-              ? Border.all(
-              color: AppTheme.accentColor.withOpacity(0.3), width: 1)
+          border: isSelected 
+              ? Border.all(color: AppTheme.accentColor.withOpacity(0.3), width: 1)
               : null,
         ),
         child: Row(
@@ -250,13 +246,13 @@ class EventCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.white
+                color: isSelected 
+                    ? Colors.white 
                     : AppTheme.accentColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isSelected
-                      ? Colors.white
+                  color: isSelected 
+                      ? Colors.white 
                       : AppTheme.accentColor.withOpacity(0.3),
                   width: 1,
                 ),
@@ -264,8 +260,7 @@ class EventCard extends StatelessWidget {
               child: Text(
                 odds.toStringAsFixed(2),
                 style: GoogleFonts.inter(
-                  color: isSelected ? AppTheme.primaryColor : AppTheme
-                      .accentColor,
+                  color: isSelected ? AppTheme.primaryColor : AppTheme.accentColor,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -274,43 +269,6 @@ class EventCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-
-  Widget _buildStat(BuildContext context, {
-    required IconData icon,
-    required String value,
-    required String label,
-  }) {
-    final theme = Theme.of(context);
-
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: theme.colorScheme.primary,
-        ),
-        const SizedBox(width: 4),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

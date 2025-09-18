@@ -6,14 +6,16 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'models/user_model.dart';
+import 'package:flutter/services.dart';
 
 import 'firebase_options.dart';
-import 'screens/main_navigation.dart';
+import 'screens/home_screen.dart';
+import 'screens/live_events_screen.dart';
+import 'screens/teams_screen.dart';
+import 'screens/profile_screen.dart' hide ProfileScreen;
 import 'services/auth_service.dart';
 import 'services/firestore_service.dart';
 import 'theme/app_theme.dart';
-import 'auth/auth_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +44,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Set system UI overlay style for dark theme
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: AppTheme.primaryColor,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ));
+
     return MultiProvider(
       providers: [
         Provider<AuthService>(
@@ -50,21 +60,77 @@ class MyApp extends StatelessWidget {
         Provider<FirestoreService>(
           create: (_) => FirestoreService(),
         ),
-        StreamProvider<UserModel?>(
+        StreamProvider<User?>(
+          create: (context) => FirebaseAuth.instance.authStateChanges(),
           initialData: null,
-          create: (context) => context.read<AuthService>().user,
-          catchError: (_, __) => null,
         ),
       ],
       child: MaterialApp(
-        title: 'Sales Bets',
+        title: 'SalesBets',
+        theme: AppTheme.darkTheme, // Force dark theme
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        home: const AuthWrapper(),
+        home: const MainNavigation(),
       ),
     );
   }
 }
 
+class MainNavigation extends StatefulWidget {
+  const MainNavigation({Key? key}) : super(key: key);
+
+  @override
+  State<MainNavigation> createState() => _MainNavigationState();
+}
+
+class _MainNavigationState extends State<MainNavigation> {
+  int _currentIndex = 0;
+
+  final List<Widget> _screens = [
+    const HomeScreen(),
+    const LiveEventsScreen(),
+    const TeamsScreen(),
+    const ProfileScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppTheme.primaryColor,
+        selectedItemColor: AppTheme.accentColor,
+        unselectedItemColor: AppTheme.textSecondary,
+        selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        unselectedLabelStyle: const TextStyle(fontSize: 12),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.sports_soccer_outlined),
+            activeIcon: Icon(Icons.sports_soccer),
+            label: 'Live',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.groups_outlined),
+            activeIcon: Icon(Icons.groups),
+            label: 'Teams',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
